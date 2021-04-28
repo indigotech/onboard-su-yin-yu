@@ -1,0 +1,22 @@
+{
+  "name": "onboard-su-yin-yu",
+  "version": "1.0.0",
+  "description": "Project's Name: Onboard Project Project's Description: Project created to perform onboarding tasks Environment and tools: Steps to run and debug:",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/indigotech/onboard-su-yin-yu.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/indigotech/onboard-su-yin-yu/issues"
+  },
+  "homepage": "https://github.com/indigotech/onboard-su-yin-yu#readme",
+  "dependencies": {
+    "graphql": "^15.5.0"
+  }
+}
