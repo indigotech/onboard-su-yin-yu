@@ -16,6 +16,6 @@ const resolvers = {
 
 const server = new ApolloServer({ typeDefs, resolvers });
 
-server.listen(4000).then(({ url }) => {
-    console.log(`Server ready at ${url}`);
+server.listen(4000).then((url: any) => {
+    console.log(`Server ready at ${url.url}`);
 });
