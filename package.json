@@ -4,7 +4,8 @@
   "description": "Project's Name: Onboard Project Project's Description: Project created to perform onboarding tasks Environment and tools: Steps to run and debug:",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/apollo-server.js"
   },
   "repository": {
     "type": "git",
@@ -16,7 +17,9 @@
     "url": "https://github.com/indigotech/onboard-su-yin-yu/issues"
   },
   "homepage": "https://github.com/indigotech/onboard-su-yin-yu#readme",
-  "dependencies": {
-    "graphql": "^15.5.0"
+  "dependencies": {},
+  "devDependencies": {
+    "apollo-server": "2.23.0",
+    "graphql": "15.5.0"
   }
 }
