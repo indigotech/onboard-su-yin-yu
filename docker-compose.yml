@@ -1,0 +1,10 @@
+testdb:
+  image: postgres:11.2
+  ports:
+    - "5433:5432"
+  volumes:
+    - ./db/dumps:/app-db-dumps
+  environment:
+    - POSTGRES_USER=sa
+    - POSTGRES_PASSWORD=1234
+    - POSTGRES_DB=onboard_test
