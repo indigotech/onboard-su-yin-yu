@@ -20,7 +20,8 @@
   "homepage": "https://github.com/indigotech/onboard-su-yin-yu#readme",
   "dependencies": {
     "apollo-server": "2.23.0",
-    "graphql": "15.5.0"
+    "graphql": "15.5.0",
+    "typeorm": "0.2.32"
   },
   "devDependencies": {
     "@types/node": "15.0.1",
