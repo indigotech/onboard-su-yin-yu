@@ -4,12 +4,30 @@ const typeDefs = gql`
   type Query {
     hello: String
   }
+
+  type Mutation {
+    createUser(name: String, email: String, password: String, birthDate: String): User
+  }
+
+  type User {
+    id: ID
+    name: String
+    email: String
+    password: String
+    birthDate: String
+  }
 `;
 
 const resolvers = {
   Query: {
     hello: () => {
       return 'Hello world!';
+    },
+  },
+
+  Mutation: {
+    createUser: (_: number, { name, email, password, birthDate }) => {
+      return { id: 1, name, email, birthDate };
     },
   },
 };
