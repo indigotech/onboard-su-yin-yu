@@ -5,15 +5,15 @@ export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ default: 'User Name' })
+  @Column()
   name!: string;
 
-  @Column({ default: 'name@email.com' })
+  @Column()
   email!: string;
 
-  @Column({ default: 'password' })
+  @Column()
   password!: string;
 
-  @Column({ default: '01-01-1990' })
+  @Column()
   birthDate!: string;
 }

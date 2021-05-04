@@ -12,9 +12,9 @@ const typeDefs = gql`
   }
 
   input UserInput {
-    name: String
-    email: String
-    password: String
+    name: String!
+    email: String!
+    password: String!
     birthDate: String
   }
 
@@ -35,19 +35,16 @@ const resolvers = {
 
   Mutation: {
     createUser: async (_, userData) => {
-      const { name, email, password, birthDate } = userData;
-
       try {
         const user = User.create({
-          name,
-          email,
-          password,
-          birthDate,
+          name: userData.data.name,
+          email: userData.data.email,
+          password: userData.data.password,
+          birthDate: userData.data.birthDate,
         });
-        await user.save();
-        return user;
+        return user.save();
       } catch (error) {
-        console.log(error);
+        return error;
       }
     },
   },
