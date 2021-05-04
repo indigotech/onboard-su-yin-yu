@@ -6,7 +6,14 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    createUser(name: String, email: String, password: String, birthDate: String): User
+    createUser(data: UserInput): User
+  }
+
+  input UserInput {
+    name: String
+    email: String
+    password: String
+    birthDate: String
   }
 
   type User {
@@ -26,8 +33,13 @@ const resolvers = {
   },
 
   Mutation: {
-    createUser: (_: number, { name, email, password, birthDate }) => {
-      return { id: 1, name, email, birthDate };
+    createUser: (_, userData) => {
+      return {
+        id: 1,
+        name: userData.data.name,
+        email: userData.data.email,
+        birthDate: userData.data.birthDate,
+      };
     },
   },
 };
