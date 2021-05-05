@@ -1,6 +1,8 @@
 import { ApolloServer, gql } from 'apollo-server';
-import { createConnection } from 'typeorm';
+import { createConnection, getManager } from 'typeorm';
 import { User } from './entity/User';
+import { validate } from 'class-validator';
+import bcrypt from 'bcrypt';
 
 const typeDefs = gql`
   type Query {
@@ -35,16 +37,21 @@ const resolvers = {
 
   Mutation: {
     createUser: async (_, userData) => {
-      try {
-        const user = User.create({
-          name: userData.data.name,
-          email: userData.data.email,
-          password: userData.data.password,
-          birthDate: userData.data.birthDate,
-        });
-        return user.save();
-      } catch (error) {
-        return error;
+      const user = new User();
+
+      user.name = userData.data.name;
+      user.email = userData.data.email;
+      user.password = await bcrypt.hash(userData.data.password, 10);
+      user.birthDate = userData.data.birthDate;
+
+      const errors = await validate(user);
+
+      if (errors.length > 0) {
+        throw new Error('Invalid input');
+      } else if (!checkPassword(user.password)) {
+        throw new Error('The password should have at least 1 letter and 1 digit');
+      } else {
+        return getManager().save(user);
       }
     },
   },
@@ -61,3 +68,10 @@ const startServer = async () => {
 };
 
 startServer();
+
+const checkPassword = (password: string): boolean => {
+  const containsLetter = new RegExp(/[a-zA-Z]+/);
+  const containsDigit = new RegExp(/[0-9]+/);
+
+  return containsLetter.test(password) && containsDigit.test(password);
+};
