@@ -2,6 +2,7 @@ import { ApolloServer, gql } from 'apollo-server';
 import { createConnection, getManager } from 'typeorm';
 import { User } from './entity/User';
 import { validate } from 'class-validator';
+import bcrypt from 'bcrypt';
 
 const typeDefs = gql`
   type Query {
@@ -40,15 +41,15 @@ const resolvers = {
 
       user.name = userData.data.name;
       user.email = userData.data.email;
-      user.password = userData.data.password;
+      user.password = await bcrypt.hash(userData.data.password, 10);
       user.birthDate = userData.data.birthDate;
 
       const errors = await validate(user);
 
       if (errors.length > 0) {
-        throw new Error("Invalid input");
+        throw new Error('Invalid input');
       } else if (!checkPassword(user.password)) {
-        throw new Error("The password should have at least 1 letter and 1 digit");
+        throw new Error('The password should have at least 1 letter and 1 digit');
       } else {
         return getManager().save(user);
       }
