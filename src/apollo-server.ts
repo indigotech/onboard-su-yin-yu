@@ -1,4 +1,6 @@
 import { ApolloServer, gql } from 'apollo-server';
+import { createConnection } from 'typeorm';
+import { User } from './entity/User';
 
 const typeDefs = gql`
   type Query {
@@ -10,9 +12,9 @@ const typeDefs = gql`
   }
 
   input UserInput {
-    name: String
-    email: String
-    password: String
+    name: String!
+    email: String!
+    password: String!
     birthDate: String
   }
 
@@ -20,7 +22,6 @@ const typeDefs = gql`
     id: ID
     name: String
     email: String
-    password: String
     birthDate: String
   }
 `;
@@ -33,19 +34,30 @@ const resolvers = {
   },
 
   Mutation: {
-    createUser: (_, userData) => {
-      return {
-        id: 1,
-        name: userData.data.name,
-        email: userData.data.email,
-        birthDate: userData.data.birthDate,
-      };
+    createUser: async (_, userData) => {
+      try {
+        const user = User.create({
+          name: userData.data.name,
+          email: userData.data.email,
+          password: userData.data.password,
+          birthDate: userData.data.birthDate,
+        });
+        return user.save();
+      } catch (error) {
+        return error;
+      }
     },
   },
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const startServer = async () => {
+  const server = new ApolloServer({ typeDefs, resolvers });
 
-server.listen(4000).then((response) => {
-  console.log(`Server ready at ${response.url}`);
-});
+  await createConnection();
+
+  server.listen(4000).then((response) => {
+    console.log(`Server ready at ${response.url}`);
+  });
+};
+
+startServer();
