@@ -20,6 +20,7 @@
   "homepage": "https://github.com/indigotech/onboard-su-yin-yu#readme",
   "dependencies": {
     "apollo-server": "2.23.0",
+    "class-validator": "0.13.1",
     "graphql": "15.5.0",
     "pg": "8.6.0",
     "reflect-metadata": "0.1.13",
