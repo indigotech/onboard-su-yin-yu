@@ -1,15 +1,16 @@
-import supertest from 'supertest';
+import request from 'supertest';
+import { startServer } from '../server-config';
 
-describe('GraphQL API', () => {
+describe('Apollo Server API', () => {
+  let requestServer;
 
-  let request;
-
-  before (() => {
-    request = supertest(`http://localhost:4000`);
+  before(async () => {
+    await startServer();
+    requestServer = request(`http://localhost:4000`);
   });
 
   it('hello query', (done) => {
-    request
+    requestServer
       .post('/graphql')
       .send({
         query: '{ hello }',
@@ -17,7 +18,7 @@ describe('GraphQL API', () => {
       .set('Accept', 'application/json')
       .expect('Content-Type', /json/)
       .expect(200)
-      .end((err, res) => {
+      .end((err) => {
         if (err) {
           return done(err);
         }

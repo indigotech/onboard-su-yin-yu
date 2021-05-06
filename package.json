@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha --require ts-node/register src/test/*.ts",
+    "dev": "ts-node-dev src/apollo-server.ts",
     "build": "tsc",
-    "start": "ts-node-dev src/apollo-server.ts"
+    "start": "node build/apollo-server.js"
   },
   "repository": {
     "type": "git",
@@ -30,12 +31,14 @@
   "devDependencies": {
     "@types/mocha": "8.2.2",
     "@types/node": "15.0.1",
+    "@types/supertest": "2.0.11",
     "@typescript-eslint/eslint-plugin": "4.22.0",
     "@typescript-eslint/parser": "4.22.0",
     "eslint": "7.25.0",
     "eslint-config-prettier": "8.3.0",
     "mocha": "8.3.2",
     "prettier": "2.2.1",
+    "supertest": "6.1.3",
     "ts-node-dev": "1.1.6",
     "typescript": "4.2.4"
   }
