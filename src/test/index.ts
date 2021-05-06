@@ -1,9 +1,27 @@
-import assert from 'assert';
+import supertest from 'supertest';
 
-describe('Array', function () {
-  describe('#indexOf()', function () {
-    it('should return -1 when the value is not present', function () {
-      assert.equal([1, 2, 3].indexOf(4), -1);
-    });
+describe('GraphQL API', () => {
+
+  let request;
+
+  before (() => {
+    request = supertest(`http://localhost:4000`);
+  });
+
+  it('hello query', (done) => {
+    request
+      .post('/graphql')
+      .send({
+        query: '{ hello }',
+      })
+      .set('Accept', 'application/json')
+      .expect('Content-Type', /json/)
+      .expect(200)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        done();
+      });
   });
 });
