@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import request from 'supertest';
 import { startServer } from '../server-config';
 
@@ -9,7 +10,7 @@ describe('Apollo Server API', () => {
     requestServer = request(`http://localhost:4000`);
   });
 
-  it('hello query', (done) => {
+  it('query response equal hello world', (done) => {
     requestServer
       .post('/graphql')
       .send({
@@ -18,10 +19,11 @@ describe('Apollo Server API', () => {
       .set('Accept', 'application/json')
       .expect('Content-Type', /json/)
       .expect(200)
-      .end((err) => {
+      .end((err, res) => {
         if (err) {
           return done(err);
         }
+        expect(res.body.data.hello).to.equal('Hello world!');
         done();
       });
   });
