@@ -1,3 +1,4 @@
+import { ApolloServer } from 'apollo-server';
 import { expect } from 'chai';
 import request, { SuperTest, Test } from 'supertest';
 import { getRepository, Repository } from 'typeorm';
@@ -5,17 +6,18 @@ import { User } from '../entity/User';
 import { startServer } from '../server-config';
 
 describe('Apollo Server API', () => {
+  let server: ApolloServer;
   let requestServer: SuperTest<Test>;
   let userRepository: Repository<User>;
 
   before(async () => {
-    await startServer();
+    server = await startServer();
     requestServer = request(`http://localhost:4000`);
     userRepository = getRepository(User);
   });
 
   beforeEach(async () => {
-    userRepository.clear();
+    await userRepository.clear();
   });
 
   it('should be possible to call hello query', async (): Promise<void> => {
@@ -27,7 +29,7 @@ describe('Apollo Server API', () => {
   });
 
   it('should be possible to create user', async (): Promise<void> => {
-    await requestServer
+    const res: request.Response = await requestServer
       .post('/graphql')
       .send({
         query: `mutation CreateUser($data: UserInput) {
@@ -48,5 +50,25 @@ describe('Apollo Server API', () => {
         },
       })
       .expect(200);
+
+    const user: User = res.body.data.createUser;
+    expect(user).to.be.deep.equal({
+      id: user.id,
+      name: 'User Name',
+      email: 'name@email.com',
+      birthDate: '01-01-1990'
+    });
+
+    const findUser = await userRepository.find({ id: user.id });
+    expect(findUser[0]).to.deep.include({
+      id: +user.id,
+      name: user.name,
+      email: user.email,
+      birthDate: user.birthDate
+    })
+  });
+
+  after(async () => {
+    await server.stop();
   });
 });

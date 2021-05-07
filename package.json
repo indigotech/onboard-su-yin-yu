@@ -7,7 +7,7 @@
     "docker": "docker-compose up -d",
     "test": "TEST='OK' mocha --require ts-node/register src/test/*.ts",
     "dev": "ts-node-dev src/apollo-server.ts",
-    "build": "rm -rf ./build | tsc",
+    "build": "rm -rf ./build & tsc",
     "start": "node build/apollo-server.js"
   },
   "repository": {

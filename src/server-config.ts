@@ -76,7 +76,7 @@ const checkPassword = (password: string): boolean => {
   return containsLetter.test(password) && containsDigit.test(password);
 };
 
-export const startServer = async (): Promise<void> => {
+export const startServer = async (): Promise<ApolloServer> => {
   const path: string = process.env.TEST === 'OK' ? './test.env' : './.env';
   dotenv.config({ path });
 
@@ -94,7 +94,8 @@ export const startServer = async (): Promise<void> => {
     entities: [User]
   });
 
-  server.listen(4000).then((response) => {
-    console.log(`Server ready at ${response.url}`);
-  });
+  const response = await server.listen(4000);
+  console.log(`Server ready at ${response.url}`);
+
+  return server;
 };
