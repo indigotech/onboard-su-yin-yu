@@ -4,9 +4,10 @@
   "description": "Project's Name: Onboard Project Project's Description: Project created to perform onboarding tasks Environment and tools: Steps to run and debug:",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --require ts-node/register src/test/*.ts",
+    "docker": "docker-compose up -d",
+    "test": "TEST='OK' mocha --require ts-node/register src/test/*.ts",
     "dev": "ts-node-dev src/apollo-server.ts",
-    "build": "tsc",
+    "build": "rm -rf ./build | tsc",
     "start": "node build/apollo-server.js"
   },
   "repository": {
@@ -23,6 +24,7 @@
     "apollo-server": "2.23.0",
     "bcrypt": "5.0.1",
     "class-validator": "0.13.1",
+    "dotenv": "9.0.0",
     "graphql": "15.5.0",
     "pg": "8.6.0",
     "reflect-metadata": "0.1.13",
