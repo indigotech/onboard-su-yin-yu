@@ -1,9 +1,12 @@
 import { ApolloServer } from 'apollo-server';
 import { expect } from 'chai';
+import dotenv from 'dotenv';
 import request, { SuperTest, Test } from 'supertest';
 import { getRepository, Repository } from 'typeorm';
 import { User } from '../entity/User';
 import { startServer } from '../server-config';
+
+dotenv.config({ path: '../test.env' });
 
 describe('Apollo Server API', () => {
   let server: ApolloServer;
@@ -14,9 +17,6 @@ describe('Apollo Server API', () => {
     server = await startServer();
     requestServer = request(`http://localhost:4000`);
     userRepository = getRepository(User);
-  });
-
-  beforeEach(async () => {
     await userRepository.clear();
   });
 
@@ -56,7 +56,7 @@ describe('Apollo Server API', () => {
       id: user.id,
       name: 'User Name',
       email: 'name@email.com',
-      birthDate: '01-01-1990'
+      birthDate: '01-01-1990',
     });
 
     const findUser = await userRepository.find({ id: user.id });

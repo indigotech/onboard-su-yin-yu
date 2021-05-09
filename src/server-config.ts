@@ -1,82 +1,10 @@
-import { ApolloServer, gql } from 'apollo-server';
-import { createConnection, getManager } from 'typeorm';
-import { validate } from 'class-validator';
-import bcrypt from 'bcrypt';
-import { User } from './entity/User';
+import { ApolloServer } from 'apollo-server';
 import dotenv from 'dotenv';
+import { createConnection } from 'typeorm';
+import { User } from './entity/User';
+import { typeDefs, resolvers } from './schema';
 
-interface UserInput {
-  name: string;
-  email: string;
-  password: string;
-  birthDate: string;
-}
-
-interface CreateUserMutation {
-  data: UserInput;
-}
-
-const typeDefs = gql`
-  type Query {
-    hello: String
-  }
-
-  type Mutation {
-    createUser(data: UserInput): User
-  }
-
-  input UserInput {
-    name: String!
-    email: String!
-    password: String!
-    birthDate: String
-  }
-
-  type User {
-    id: ID
-    name: String
-    email: String
-    birthDate: String
-  }
-`;
-
-const resolvers = {
-  Query: {
-    hello: (): string => {
-      return 'Hello world!';
-    },
-  },
-
-  Mutation: {
-    createUser: async (_, userData: CreateUserMutation): Promise<User> => {
-      const user = new User();
-
-      user.name = userData.data.name;
-      user.email = userData.data.email;
-      user.password = await bcrypt.hash(userData.data.password, 10);
-      user.birthDate = userData.data.birthDate;
-
-      const errors = await validate(user);
-
-      if (errors.length > 0) {
-        throw new Error('Invalid input');
-      } else if (!checkPassword(user.password)) {
-        throw new Error('The password should have at least 1 letter and 1 digit');
-      } else {
-        return getManager().save(user);
-      }
-    },
-  },
-};
-
-const checkPassword = (password: string): boolean => {
-  const containsLetter = new RegExp(/[a-zA-Z]+/);
-  const containsDigit = new RegExp(/[0-9]+/);
-
-  return containsLetter.test(password) && containsDigit.test(password);
-};
-
-export const startServer = async (): Promise<ApolloServer> => {
+export async function startServer(): Promise<ApolloServer> {
   const path: string = process.env.TEST === 'OK' ? './test.env' : './.env';
   dotenv.config({ path });
 
@@ -91,7 +19,7 @@ export const startServer = async (): Promise<ApolloServer> => {
     database: process.env.PS_DATABASE,
     synchronize: true,
     logging: false,
-    entities: [User]
+    entities: [User],
   });
 
   const response = await server.listen(4000);
