@@ -1,5 +1,4 @@
 import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from 'typeorm';
-import { MinLength } from 'class-validator';
 
 @Entity()
 export class User extends BaseEntity {
@@ -13,7 +12,6 @@ export class User extends BaseEntity {
   email!: string;
 
   @Column()
-  @MinLength(7)
   password!: string;
 
   @Column()
