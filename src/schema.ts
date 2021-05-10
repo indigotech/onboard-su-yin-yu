@@ -2,8 +2,8 @@ import { gql } from 'apollo-server';
 import bcrypt from 'bcrypt';
 import { getManager, getRepository } from 'typeorm';
 import { User } from './entity/User';
-import { errorMessage, InputError, InternalError } from './error';
-import { checkPasswordLength, checkPasswordPattern, CreateUserMutation } from './user-input';
+import { AuthError, errorMessage, InputError, InternalError } from './error';
+import { AuthPayload, checkPasswordLength, checkPasswordPattern, CreateUserMutation, LoginInput } from './user-input';
 
 export const typeDefs = gql`
   type Query {
@@ -12,6 +12,7 @@ export const typeDefs = gql`
 
   type Mutation {
     createUser(data: UserInput): User
+    login(data: LoginInput): AuthPayload
   }
 
   input UserInput {
@@ -21,11 +22,21 @@ export const typeDefs = gql`
     birthDate: String
   }
 
+  input LoginInput {
+    email: String!
+    password: String!
+  }
+
   type User {
-    id: ID
-    name: String
-    email: String
+    id: ID!
+    name: String!
+    email: String!
     birthDate: String
+  }
+
+  type AuthPayload {
+    db_user: User!
+    token: String!
   }
 `;
 
@@ -69,6 +80,24 @@ export const resolvers = {
       }
 
       return user;
+    },
+
+    login: async (_, login: { data: LoginInput }): Promise<AuthPayload> => {
+      const userRepository = await getRepository(User);
+
+      const db_user = await userRepository.findOne({ email: login.data.email });
+      if (!db_user) {
+        throw new AuthError();
+      }
+
+      const valid = await bcrypt.compare(login.data.password, db_user.password);
+      if (!valid) {
+        throw new AuthError();
+      }
+
+      const token = 'the_token';
+
+      return { db_user, token };
     },
   },
 };

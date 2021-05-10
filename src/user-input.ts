@@ -5,8 +5,25 @@ export interface UserInput {
   birthDate: string;
 }
 
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  birthDate: string;
+}
+
 export interface CreateUserMutation {
   data: UserInput;
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+export interface AuthPayload {
+  db_user: User;
+  token: string;
 }
 
 export function checkPasswordLength(password: string): boolean {
