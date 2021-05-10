@@ -27,4 +27,4 @@ export async function startServer(): Promise<ApolloServer> {
   console.log(`Server ready at ${response.url}`);
 
   return server;
-};
+}

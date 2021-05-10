@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import request, { SuperTest, Test } from 'supertest';
 import { getRepository, Repository } from 'typeorm';
 import { User } from '../entity/User';
+import { errorMessage } from '../error';
 import { startServer } from '../server-config';
 
 dotenv.config({ path: '../test.env' });
@@ -20,6 +21,17 @@ describe('Apollo Server API', () => {
     await userRepository.clear();
   });
 
+  const mutationCreateUser = `
+    mutation CreateUser($data: UserInput) {
+      createUser(data: $data) {
+        id
+        name
+        email
+        birthDate
+      }
+    }
+  `;
+
   it('should be possible to call hello query', async (): Promise<void> => {
     const res: request.Response = await requestServer
       .post('/graphql')
@@ -29,34 +41,24 @@ describe('Apollo Server API', () => {
   });
 
   it('should be possible to create user', async (): Promise<void> => {
+    const user = new User();
+    user.name = 'User Name';
+    user.email = 'name@email.com';
+    user.password = 'abcd1234';
+    user.birthDate = '01-01-1990';
+
     const res: request.Response = await requestServer
       .post('/graphql')
       .send({
-        query: `mutation CreateUser($data: UserInput) {
-          createUser(data: $data) {
-            id
-            name
-            email
-            birthDate
-          }
-        }`,
-        variables: {
-          data: {
-            name: 'User Name',
-            email: 'name@email.com',
-            password: 'abcd1234',
-            birthDate: '01-01-1990',
-          },
-        },
-      })
-      .expect(200);
+        query: mutationCreateUser,
+        variables: { data: user },
+      });
 
-    const user: User = res.body.data.createUser;
-    expect(user).to.be.deep.equal({
-      id: user.id,
-      name: 'User Name',
-      email: 'name@email.com',
-      birthDate: '01-01-1990',
+    expect(res.body.data.createUser).to.have.property('id');
+    expect(res.body.data.createUser).to.deep.include({
+      name: user.name,
+      email: user.email,
+      birthDate: user.birthDate,
     });
 
     const findUser = await userRepository.find({ id: user.id });
@@ -66,6 +68,66 @@ describe('Apollo Server API', () => {
       email: user.email,
       birthDate: user.birthDate
     })
+  });
+
+  it('should return an error about repeated email', async (): Promise<void> => {
+    const user = new User();
+    user.name = 'User Name2';
+    user.email = 'name@email.com';
+    user.password = 'abcd1234';
+    user.birthDate = '01-01-1990';
+
+    const res = await requestServer
+      .post('/graphql')
+      .send({
+        query: mutationCreateUser,
+        variables: { data: user },
+      });
+
+    expect(res.body.errors[0]).to.deep.include({
+      message: errorMessage.email,
+      code: 400,
+    });
+  });
+
+  it('should return an error about short password', async (): Promise<void> => {
+    const user = new User();
+    user.name = 'User Name3';
+    user.email = 'name3@email.com';
+    user.password = 'abcd';
+    user.birthDate = '01-01-1990';
+
+    const res = await requestServer
+      .post('/graphql')
+      .send({
+        query: mutationCreateUser,
+        variables: { data: user },
+      });
+
+    expect(res.body.errors[0]).to.deep.include({
+      message: errorMessage.shortPassword,
+      code: 400,
+    });
+  });
+
+  it('should return an error about password pattern', async (): Promise<void> => {
+    const user = new User();
+    user.name = 'User Name4';
+    user.email = 'name4@email.com';
+    user.password = 'abcdefg';
+    user.birthDate = '01-01-1990';
+
+    const res = await requestServer
+      .post('/graphql')
+      .send({
+        query: mutationCreateUser,
+        variables: { data: user },
+      });
+
+    expect(res.body.errors[0]).to.deep.include({
+      message: errorMessage.passwordPattern,
+      code: 400,
+    });
   });
 
   after(async () => {

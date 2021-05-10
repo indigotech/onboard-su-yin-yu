@@ -1,4 +1,4 @@
-import { GraphQLError } from "graphql";
+import { GraphQLError } from 'graphql';
 
 export abstract class BaseError extends Error {
   public readonly base: boolean = true;
@@ -47,3 +47,9 @@ export function formatError(error: GraphQLError) {
     };
   }
 }
+
+export const errorMessage = {
+  email: 'Este e-mail já está cadastrado. Tente outro e-mail.',
+  passwordPattern: 'A senha deve conter letras e números.',
+  shortPassword: 'A senha deve ter pelo menos 7 caracteres.',
+};
