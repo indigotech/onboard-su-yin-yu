@@ -2,13 +2,14 @@ import { ApolloServer } from 'apollo-server';
 import dotenv from 'dotenv';
 import { createConnection } from 'typeorm';
 import { User } from './entity/User';
+import { formatError } from './error';
 import { typeDefs, resolvers } from './schema';
 
 export async function startServer(): Promise<ApolloServer> {
   const path: string = process.env.TEST === 'OK' ? './test.env' : './.env';
   dotenv.config({ path });
 
-  const server = new ApolloServer({ typeDefs, resolvers });
+  const server = new ApolloServer({ typeDefs, resolvers, formatError });
 
   await createConnection({
     type: 'postgres',

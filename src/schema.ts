@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import { expect } from 'chai';
 import { getManager } from 'typeorm';
 import { User } from './entity/User';
+import { InputError } from './error';
 import { checkPasswordLength, checkPasswordPattern, CreateUserMutation } from './user-input';
 
 export const typeDefs = gql`
@@ -46,16 +47,16 @@ export const resolvers = {
       user.birthDate = userData.data.birthDate;
 
       if (!checkPasswordLength(user.password)) {
-        throw new Error('A senha deve ter mais de 7 caracteres.');
+        throw new InputError('A senha deve ter mais de 7 caracteres.');
       } else if (!checkPasswordPattern(user.password)) {
-        throw new Error('A senha deve conter letras e números.');
+        throw new InputError('A senha deve conter letras e números.');
       } else {
         user.password = await bcrypt.hash(user.password, 10);
         try {
           await getManager().save(user);
         } catch (error) {
           if (expect(error.detail).to.match(/email.+already exists/)) {
-            throw new Error('Não foi possível cadastrar o e-mail. Tente outro e-mail.');
+            throw new InputError('Não foi possível cadastrar o e-mail. Tente outro e-mail.', error.detail);
           }
         }
       }
