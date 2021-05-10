@@ -54,16 +54,17 @@ describe('Apollo Server API', () => {
         variables: { data: user },
       });
 
-    expect(res.body.data.createUser).to.have.property('id');
-    expect(res.body.data.createUser).to.deep.include({
+    const createdUser = res.body.data.createUser;
+    expect(createdUser).to.have.property('id');
+    expect(createdUser).to.deep.include({
       name: user.name,
       email: user.email,
       birthDate: user.birthDate,
     });
 
-    const findUser = await userRepository.find({ id: user.id });
+    const findUser = await userRepository.find({ id: createdUser.id });
     expect(findUser[0]).to.deep.include({
-      id: +user.id,
+      id: +createdUser.id,
       name: user.name,
       email: user.email,
       birthDate: user.birthDate
@@ -104,7 +105,7 @@ describe('Apollo Server API', () => {
         variables: { data: user },
       });
 
-    expect(res.body.errors[0]).to.deep.include({
+    expect(res.body.errors[0]).to.be.deep.equal({
       message: errorMessage.shortPassword,
       code: 400,
     });
@@ -124,7 +125,7 @@ describe('Apollo Server API', () => {
         variables: { data: user },
       });
 
-    expect(res.body.errors[0]).to.deep.include({
+    expect(res.body.errors[0]).to.be.deep.equal({
       message: errorMessage.passwordPattern,
       code: 400,
     });

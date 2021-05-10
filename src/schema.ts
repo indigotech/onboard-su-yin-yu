@@ -1,9 +1,8 @@
 import { gql } from 'apollo-server';
 import bcrypt from 'bcrypt';
-import { expect } from 'chai';
-import { getManager } from 'typeorm';
+import { getManager, getRepository } from 'typeorm';
 import { User } from './entity/User';
-import { errorMessage, InputError } from './error';
+import { errorMessage, InputError, InternalError } from './error';
 import { checkPasswordLength, checkPasswordPattern, CreateUserMutation } from './user-input';
 
 export const typeDefs = gql`
@@ -59,8 +58,13 @@ export const resolvers = {
       try {
         await getManager().save(user);
       } catch (error) {
-        if (expect(error.detail).to.match(/email.+already exists/)) {
+        const userRepository = await getRepository(User);
+        const findUser = await userRepository.find({ email: user.email });
+
+        if (findUser.length > 0) {
           throw new InputError(errorMessage.email, error.detail);
+        } else {
+          throw new InternalError();
         }
       }
 
