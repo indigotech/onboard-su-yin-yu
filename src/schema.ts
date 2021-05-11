@@ -1,9 +1,17 @@
 import { gql } from 'apollo-server';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { getManager, getRepository } from 'typeorm';
 import { User } from './entity/User';
-import { errorMessage, InputError, InternalError } from './error';
-import { checkPasswordLength, checkPasswordPattern, CreateUserMutation } from './user-input';
+import { AuthError, ConflictError, errorMessage, InputError } from './error';
+import {
+  AuthPayload,
+  checkPasswordLength,
+  checkPasswordPattern,
+  Context,
+  CreateUserMutation,
+  LoginInput,
+} from './user-input';
 
 export const typeDefs = gql`
   type Query {
@@ -12,6 +20,7 @@ export const typeDefs = gql`
 
   type Mutation {
     createUser(data: UserInput): User
+    login(data: LoginInput): AuthPayload
   }
 
   input UserInput {
@@ -21,11 +30,22 @@ export const typeDefs = gql`
     birthDate: String
   }
 
+  input LoginInput {
+    email: String!
+    password: String!
+    rememberMe: Boolean
+  }
+
   type User {
-    id: ID
-    name: String
-    email: String
+    id: ID!
+    name: String!
+    email: String!
     birthDate: String
+  }
+
+  type AuthPayload {
+    user: User!
+    token: String!
   }
 `;
 
@@ -37,9 +57,11 @@ export const resolvers = {
   },
 
   Mutation: {
-    createUser: async (_, userData: CreateUserMutation): Promise<User> => {
-      const user = new User();
+    createUser: async (_, userData: CreateUserMutation, context: Context): Promise<User> => {
+      const secret = process.env.JWT_SECRET ?? 'secret';
+      jwt.verify(context.token, secret);
 
+      const user = new User();
       user.name = userData.data.name;
       user.email = userData.data.email;
       user.password = userData.data.password;
@@ -55,20 +77,37 @@ export const resolvers = {
 
       user.password = await bcrypt.hash(user.password, 10);
 
-      try {
-        await getManager().save(user);
-      } catch (error) {
-        const userRepository = await getRepository(User);
-        const findUser = await userRepository.find({ email: user.email });
-
-        if (findUser.length > 0) {
-          throw new InputError(errorMessage.email, error.detail);
-        } else {
-          throw new InternalError();
-        }
+      const userRepository = getRepository(User);
+      const findUser = await userRepository.findOne({ email: user.email });
+      if (findUser) {
+        throw new InputError(errorMessage.email);
       }
 
+      await getManager().save(user);
+
       return user;
+    },
+
+    login: async (_, login: { data: LoginInput }): Promise<AuthPayload> => {
+      const userRepository = getRepository(User);
+
+      const dbUser = await userRepository.findOne({ email: login.data.email });
+      if (!dbUser) {
+        throw new ConflictError();
+      }
+
+      const isPasswordValid = await bcrypt.compare(login.data.password, dbUser.password);
+      if (!isPasswordValid) {
+        throw new AuthError();
+      }
+
+      const secret = process.env.JWT_SECRET ?? 'secret';
+      const token = jwt.sign(
+        { id: dbUser.id },
+        secret,
+        { expiresIn: login.data.rememberMe ? 7 * 24 * 3600 : 3600 });
+
+      return { user: dbUser, token };
     },
   },
 };
