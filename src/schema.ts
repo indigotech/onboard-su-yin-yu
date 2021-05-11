@@ -1,5 +1,6 @@
 import { gql } from 'apollo-server';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { getManager, getRepository } from 'typeorm';
 import { User } from './entity/User';
 import { AuthError, errorMessage, InputError, InternalError } from './error';
@@ -25,6 +26,7 @@ export const typeDefs = gql`
   input LoginInput {
     email: String!
     password: String!
+    rememberMe: Boolean
   }
 
   type User {
@@ -95,7 +97,14 @@ export const resolvers = {
         throw new AuthError();
       }
 
-      const token = 'the_token';
+      let token: string;
+      const secret = process.env.JWT_SECRET ?? 'secret';
+
+      if (login.data.rememberMe) {
+        token = jwt.sign({ email: db_user.email }, secret, { expiresIn: 7 * 24 * 3600 });
+      } else {
+        token = jwt.sign({ email: db_user.email }, secret, { expiresIn: 3600 });
+      }
 
       return { db_user, token };
     },
