@@ -24,7 +24,7 @@ export class InternalError extends BaseError {
 }
 
 export class InputError extends BaseError {
-  constructor(message = errorMessage.userInput, detail?: string) {
+  constructor(message = errorMessage.input, detail?: string) {
     super(message, 400, detail);
   }
 }
@@ -32,6 +32,12 @@ export class InputError extends BaseError {
 export class ConflictError extends BaseError {
   constructor(message = errorMessage.conflict, detail?: string) {
     super(message, 409, detail);
+  }
+}
+
+export class NotFoundError extends BaseError {
+  constructor(message = errorMessage.notFound, detail?: string) {
+    super(message, 404, detail);
   }
 }
 
@@ -55,12 +61,15 @@ export function formatError(error: GraphQLError) {
 }
 
 export const errorMessage = {
-  email: 'Este e-mail já está cadastrado. Tente outro e-mail.',
-  passwordPattern: 'A senha deve conter letras e números.',
-  shortPassword: 'A senha deve ter pelo menos 7 caracteres.',
   default: 'Ocorreu um erro interno. Tente novamente.',
   auth: 'Credenciais inválidas.',
   internal: 'Ocorreu um erro. Tente novamente.',
-  userInput: 'Erro no preenchimento dos dados. Tente novamente.',
+  input: 'Erro no preenchimento dos dados. Tente novamente.',
   conflict: 'A requisição não pôde ser concluída. Tente novamente.',
+  notFound: 'Dados não encontrados.',
+
+  email: 'Este e-mail já está cadastrado. Tente outro e-mail.',
+  passwordPattern: 'A senha deve conter letras e números.',
+  shortPassword: 'A senha deve ter pelo menos 7 caracteres.',
+  userNotFound: 'Usuário não encontrado',
 };
