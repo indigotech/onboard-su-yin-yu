@@ -16,7 +16,7 @@ export async function startServer(): Promise<ApolloServer> {
     context: ({ req }) => {
       const token = req.headers.authorization || '';
       return { token };
-    }
+    },
   });
 
   await createConnection({

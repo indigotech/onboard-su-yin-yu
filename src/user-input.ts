@@ -23,7 +23,7 @@ export interface LoginInput {
 }
 
 export interface AuthPayload {
-  db_user: User;
+  user: User;
   token: string;
 }
 

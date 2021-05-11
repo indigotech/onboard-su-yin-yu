@@ -3,8 +3,15 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { getManager, getRepository } from 'typeorm';
 import { User } from './entity/User';
-import { AuthError, errorMessage, InputError, InternalError } from './error';
-import { AuthPayload, checkPasswordLength, checkPasswordPattern, CreateUserMutation, Context, LoginInput } from './user-input';
+import { AuthError, ConflictError, errorMessage, InputError } from './error';
+import {
+  AuthPayload,
+  checkPasswordLength,
+  checkPasswordPattern,
+  Context,
+  CreateUserMutation,
+  LoginInput,
+} from './user-input';
 
 export const typeDefs = gql`
   type Query {
@@ -37,7 +44,7 @@ export const typeDefs = gql`
   }
 
   type AuthPayload {
-    db_user: User!
+    user: User!
     token: String!
   }
 `;
@@ -51,18 +58,8 @@ export const resolvers = {
 
   Mutation: {
     createUser: async (_, userData: CreateUserMutation, context: Context): Promise<User> => {
-      try {
-        const secret = process.env.JWT_SECRET ?? 'secret';
-        const payload: { email: string } = jwt.verify(context.token, secret) as any;
-
-        const userRepository = await getRepository(User);
-        const db_user = await userRepository.findOne({ email: payload.email });
-        if (!db_user) {
-          throw new AuthError();
-        }
-      } catch (error) {
-        throw new AuthError();
-      }
+      const secret = process.env.JWT_SECRET ?? 'secret';
+      jwt.verify(context.token, secret);
 
       const user = new User();
       user.name = userData.data.name;
@@ -80,44 +77,37 @@ export const resolvers = {
 
       user.password = await bcrypt.hash(user.password, 10);
 
-      const userRepository = await getRepository(User);
-      const findUser = await userRepository.find({ email: user.email });
-      if (findUser.length > 0) {
+      const userRepository = getRepository(User);
+      const findUser = await userRepository.findOne({ email: user.email });
+      if (findUser) {
         throw new InputError(errorMessage.email);
       }
 
-      try {
-        await getManager().save(user);
-      } catch {
-        throw new InternalError();
-      }
+      await getManager().save(user);
 
       return user;
     },
 
     login: async (_, login: { data: LoginInput }): Promise<AuthPayload> => {
-      const userRepository = await getRepository(User);
+      const userRepository = getRepository(User);
 
-      const db_user = await userRepository.findOne({ email: login.data.email });
-      if (!db_user) {
+      const dbUser = await userRepository.findOne({ email: login.data.email });
+      if (!dbUser) {
+        throw new ConflictError();
+      }
+
+      const isPasswordValid = await bcrypt.compare(login.data.password, dbUser.password);
+      if (!isPasswordValid) {
         throw new AuthError();
       }
 
-      const valid = await bcrypt.compare(login.data.password, db_user.password);
-      if (!valid) {
-        throw new AuthError();
-      }
-
-      let token: string;
       const secret = process.env.JWT_SECRET ?? 'secret';
+      const token = jwt.sign(
+        { id: dbUser.id },
+        secret,
+        { expiresIn: login.data.rememberMe ? 7 * 24 * 3600 : 3600 });
 
-      if (login.data.rememberMe) {
-        token = jwt.sign({ email: db_user.email }, secret, { expiresIn: 7 * 24 * 3600 });
-      } else {
-        token = jwt.sign({ email: db_user.email }, secret, { expiresIn: 3600 });
-      }
-
-      return { db_user, token };
+      return { user: dbUser, token };
     },
   },
 };

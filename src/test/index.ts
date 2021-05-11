@@ -80,8 +80,8 @@ describe('Apollo Server API', () => {
       id: +createdUser.id,
       name: user.name,
       email: user.email,
-      birthDate: user.birthDate
-    })
+      birthDate: user.birthDate,
+    });
   });
 
   it('should return an error about repeated email', async (): Promise<void> => {
@@ -147,7 +147,7 @@ describe('Apollo Server API', () => {
     });
   });
 
-  it('should return an error about missing tokenn', async (): Promise<void> => {
+  it('should return an error when token is missing', async (): Promise<void> => {
     const user = new User();
     user.name = 'User Name 5';
     user.email = 'name5@email.com';
@@ -161,13 +161,13 @@ describe('Apollo Server API', () => {
         variables: { data: user },
       });
 
-    expect(res.body.errors[0]).to.be.deep.equal({
-      message: errorMessage.invalidLogin,
-      code: 401,
+    expect(res.body.errors[0]).to.deep.include({
+      message: errorMessage.default,
+      code: 500,
     });
   });
 
-  it('should return an error about invalid tokenn', async (): Promise<void> => {
+  it('should return an error when token is invalid', async (): Promise<void> => {
     const user = new User();
     user.name = 'User Name 6';
     user.email = 'name6@email.com';
@@ -184,9 +184,9 @@ describe('Apollo Server API', () => {
         variables: { data: user },
       });
 
-    expect(res.body.errors[0]).to.be.deep.equal({
-      message: errorMessage.invalidLogin,
-      code: 401,
+    expect(res.body.errors[0]).to.deep.include({
+      message: errorMessage.default,
+      code: 500,
     });
   });
 
