@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { getManager, getRepository } from 'typeorm';
 import { User } from './entity/User';
 import { AuthError, errorMessage, InputError, InternalError } from './error';
-import { AuthPayload, checkPasswordLength, checkPasswordPattern, CreateUserMutation, LoginInput } from './user-input';
+import { AuthPayload, checkPasswordLength, checkPasswordPattern, CreateUserMutation, Context, LoginInput } from './user-input';
 
 export const typeDefs = gql`
   type Query {
@@ -50,9 +50,21 @@ export const resolvers = {
   },
 
   Mutation: {
-    createUser: async (_, userData: CreateUserMutation): Promise<User> => {
-      const user = new User();
+    createUser: async (_, userData: CreateUserMutation, context: Context): Promise<User> => {
+      try {
+        const secret = process.env.JWT_SECRET ?? 'secret';
+        const payload: { email: string } = jwt.verify(context.token, secret) as any;
 
+        const userRepository = await getRepository(User);
+        const db_user = await userRepository.findOne({ email: payload.email });
+        if (!db_user) {
+          throw new AuthError();
+        }
+      } catch (error) {
+        throw new AuthError();
+      }
+
+      const user = new User();
       user.name = userData.data.name;
       user.email = userData.data.email;
       user.password = userData.data.password;
@@ -68,17 +80,16 @@ export const resolvers = {
 
       user.password = await bcrypt.hash(user.password, 10);
 
+      const userRepository = await getRepository(User);
+      const findUser = await userRepository.find({ email: user.email });
+      if (findUser.length > 0) {
+        throw new InputError(errorMessage.email);
+      }
+
       try {
         await getManager().save(user);
-      } catch (error) {
-        const userRepository = await getRepository(User);
-        const findUser = await userRepository.find({ email: user.email });
-
-        if (findUser.length > 0) {
-          throw new InputError(errorMessage.email, error.detail);
-        } else {
-          throw new InternalError();
-        }
+      } catch {
+        throw new InternalError();
       }
 
       return user;

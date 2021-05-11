@@ -27,6 +27,10 @@ export interface AuthPayload {
   token: string;
 }
 
+export interface Context {
+  token: string;
+}
+
 export function checkPasswordLength(password: string): boolean {
   const MIN_LENGTH = 7;
   return password.length >= MIN_LENGTH;

@@ -9,7 +9,15 @@ export async function startServer(): Promise<ApolloServer> {
   const path: string = process.env.TEST === 'OK' ? './test.env' : './.env';
   dotenv.config({ path });
 
-  const server = new ApolloServer({ typeDefs, resolvers, formatError });
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    formatError,
+    context: ({ req }) => {
+      const token = req.headers.authorization || '';
+      return { token };
+    }
+  });
 
   await createConnection({
     type: 'postgres',
