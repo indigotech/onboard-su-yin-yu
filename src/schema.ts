@@ -65,11 +65,10 @@ export const resolvers = {
 
       if (!findUser) {
         throw new NotFoundError(errorMessage.userNotFound);
-      } else {
-        return findUser;
       }
-    }
 
+      return findUser;
+    }
   },
 
   Mutation: {

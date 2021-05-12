@@ -68,8 +68,12 @@ describe('GraphQL Query', () => {
       });
 
     const findUser: User = res.body.data.user;
-    expect(+findUser.id).to.equal(userId);
-    expect(findUser).to.include.keys('name', 'email', 'birthDate');
+    expect(findUser).to.be.deep.eq({
+      id: String(userId),
+      name: user.name,
+      email: user.email,
+      birthDate: user.birthDate,
+    });
   });
 
   it('should return an error about user not found', async (): Promise<void> => {
