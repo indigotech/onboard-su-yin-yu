@@ -28,13 +28,13 @@ describe('GraphQL Query', () => {
         'Authenticate Login',
         'login@email.com',
         'abcd1234',
-        '01-01-1990',
+        new Date(1990, 1, 1),
       );
 
       const secret: string = process.env.JWT_SECRET ?? 'secret';
       token = jwt.sign({ id: login.id }, secret, { expiresIn: 3600 });
 
-      user = await saveNewUser(userRepository, 'User Name', 'name@email.com', 'abcd1234', '01-01-1990');
+      user = await saveNewUser(userRepository, 'User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
       userId = user.id;
     },
   );
@@ -72,7 +72,7 @@ describe('GraphQL Query', () => {
       id: String(userId),
       name: user.name,
       email: user.email,
-      birthDate: user.birthDate,
+      birthDate: getDateFromISO(user.birthDate),
     });
   });
 
@@ -131,7 +131,7 @@ async function saveNewUser(
   name: string,
   email: string,
   password: string,
-  birthDate: string,
+  birthDate: Date,
 ): Promise<User> {
 
   const user: User = new User();
@@ -142,4 +142,8 @@ async function saveNewUser(
 
   await repository.save(user);
   return user;
+}
+
+function getDateFromISO(date: Date): string {
+  return date.toISOString().split('T')[0];
 }

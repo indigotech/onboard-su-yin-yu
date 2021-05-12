@@ -27,7 +27,7 @@ describe('GraphQL Mutation', () => {
         'Authenticate Login',
         'login@email.com',
         'abcd1234',
-        '01-01-1990',
+        new Date(1990, 1, 1),
       );
 
       const secret: string = process.env.JWT_SECRET ?? 'secret';
@@ -47,7 +47,7 @@ describe('GraphQL Mutation', () => {
   `;
 
   it('should be possible to create user', async (): Promise<void> => {
-    const user: User = newUser('User Name', 'name@email.com', 'abcd1234', '01-01-1990');
+    const user: User = newUser('User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
 
     const res: request.Response = await requestServer
       .post('/graphql')
@@ -62,7 +62,7 @@ describe('GraphQL Mutation', () => {
     expect(resUser).to.deep.include({
       name: user.name,
       email: user.email,
-      birthDate: user.birthDate,
+      birthDate: user.birthDate.toISOString(),
     });
 
     const dbUser = await userRepository.findOne({ id: resUser.id });
@@ -70,13 +70,13 @@ describe('GraphQL Mutation', () => {
       id: +resUser.id,
       name: user.name,
       email: user.email,
-      birthDate: user.birthDate,
+      birthDate: getDateFromISO(user.birthDate),
     });
   });
 
   it('should return an error about repeated email', async (): Promise<void> => {
-    await saveNewUser(userRepository, 'User Name', 'name@email.com', 'abcd1234', '01-01-1990');
-    const duplicatedUser: User = newUser('User Name', 'name@email.com', 'abcd1234', '01-01-1990');
+    await saveNewUser(userRepository, 'User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
+    const duplicatedUser: User = newUser('User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
 
     const res: request.Response = await requestServer
       .post('/graphql')
@@ -93,7 +93,7 @@ describe('GraphQL Mutation', () => {
   });
 
   it('should return an error about short password', async (): Promise<void> => {
-    const user: User = newUser('User Name', 'name@email.com', 'abcd', '01-01-1990');
+    const user: User = newUser('User Name', 'name@email.com', 'abcd', new Date(1990, 1, 1));
 
     const res: request.Response = await requestServer
       .post('/graphql')
@@ -110,7 +110,7 @@ describe('GraphQL Mutation', () => {
   });
 
   it('should return an error about password pattern', async (): Promise<void> => {
-    const user: User = newUser('User Name', 'name@email.com', 'abcdefg', '01-01-1990');
+    const user: User = newUser('User Name', 'name@email.com', 'abcdefg', new Date(1990, 1, 1));
 
     const res: request.Response = await requestServer
       .post('/graphql')
@@ -127,7 +127,7 @@ describe('GraphQL Mutation', () => {
   });
 
   it('should return an error for createUser when token is missing', async (): Promise<void> => {
-    const user: User = newUser('User Name', 'name@email.com', 'abcd1234', '01-01-1990');
+    const user: User = newUser('User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
 
     const res: request.Response = await requestServer
       .post('/graphql')
@@ -143,7 +143,7 @@ describe('GraphQL Mutation', () => {
   });
 
   it('should return an error for mutation when token is invalid', async (): Promise<void> => {
-    const user: User = newUser('User Name', 'name@email.com', 'abcd1234', '01-01-1990');
+    const user: User = newUser('User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
 
     const invalidToken: string = jwt.sign({ id: login.id }, 'abc', { expiresIn: 3600 });
 
@@ -162,7 +162,7 @@ describe('GraphQL Mutation', () => {
   });
 });
 
-function newUser(name: string, email: string, password: string, birthDate: string): User {
+function newUser(name: string, email: string, password: string, birthDate: Date): User {
   const user: User = new User();
   user.name = name;
   user.email = email;
@@ -177,7 +177,7 @@ async function saveNewUser(
   name: string,
   email: string,
   password: string,
-  birthDate: string,
+  birthDate: Date,
 ): Promise<User> {
 
   const user: User = new User();
@@ -188,4 +188,8 @@ async function saveNewUser(
 
   await repository.save(user);
   return user;
+}
+
+function getDateFromISO(date: Date): string {
+  return date.toISOString().split('T')[0];
 }

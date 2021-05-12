@@ -98,9 +98,7 @@ export const resolvers = {
         throw new InputError(errorMessage.email);
       }
 
-      await getManager().save(user);
-
-      return user;
+      return getManager().save(user);
     },
 
     login: async (_, login: { data: LoginInput }): Promise<AuthPayload> => {

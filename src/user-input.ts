@@ -2,14 +2,14 @@ export interface UserInput {
   name: string;
   email: string;
   password: string;
-  birthDate: string;
+  birthDate: Date;
 }
 
 export interface User {
   id: number;
   name: string;
   email: string;
-  birthDate: string;
+  birthDate: Date;
 }
 
 export interface CreateUserMutation {
