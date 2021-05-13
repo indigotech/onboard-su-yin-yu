@@ -8,7 +8,7 @@
     "dev": "ts-node-dev src/apollo-server.ts",
     "docker": "docker-compose up -d",
     "start": "node build/apollo-server.js",
-    "seed": "ts-node-dev src/seed-database.ts",
+    "seed": "ts-node-dev src/run-seed.ts",
     "test": "TEST='OK' mocha --require ts-node/register src/test/index.ts"
   },
   "repository": {

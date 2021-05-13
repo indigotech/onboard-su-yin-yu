@@ -3,7 +3,7 @@ import faker from 'faker';
 import { createConnection, getRepository, Repository } from 'typeorm';
 import { User } from './entity/User';
 
-async function seedDatabase(numberOfUsers) {
+export async function seedDatabase(numberOfUsers: number): Promise<void> {
   dotenv.config({ path: './.env' });
 
   await createConnection({
@@ -35,7 +35,5 @@ async function seedDatabase(numberOfUsers) {
     i++;
   } while (i < numberOfUsers);
 
-  userRepository.save(fakeUsers);
+  await userRepository.save(fakeUsers);
 }
-
-seedDatabase(100);

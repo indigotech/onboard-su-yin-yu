@@ -1,10 +1,10 @@
-import bcrypt from 'bcrypt';
 import { expect } from 'chai';
 import jwt from 'jsonwebtoken';
 import request, { SuperTest, Test } from 'supertest';
 import { getRepository, Repository } from 'typeorm';
 import { User } from '../entity/User';
 import { errorMessage } from '../error';
+import { getDateFromISO, newUser, saveNewUser } from './utils';
 
 describe('GraphQL Mutation', () => {
   let requestServer: SuperTest<Test>;
@@ -15,8 +15,7 @@ describe('GraphQL Mutation', () => {
   before((): void => {
     requestServer = request(`http://localhost:${process.env.SERVER_PORT}`);
     userRepository = getRepository(User);
-  },
-  );
+  });
 
   beforeEach(
     async (): Promise<void> => {
@@ -161,35 +160,3 @@ describe('GraphQL Mutation', () => {
     });
   });
 });
-
-function newUser(name: string, email: string, password: string, birthDate: Date): User {
-  const user: User = new User();
-  user.name = name;
-  user.email = email;
-  user.password = password;
-  user.birthDate = birthDate;
-
-  return user;
-}
-
-async function saveNewUser(
-  repository: Repository<User>,
-  name: string,
-  email: string,
-  password: string,
-  birthDate: Date,
-): Promise<User> {
-
-  const user: User = new User();
-  user.name = name;
-  user.email = email;
-  user.password = await bcrypt.hash(password, 10);
-  user.birthDate = birthDate;
-
-  await repository.save(user);
-  return user;
-}
-
-function getDateFromISO(date: Date): string {
-  return date.toISOString().split('T')[0];
-}
