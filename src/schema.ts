@@ -80,7 +80,7 @@ export const resolvers = {
       const secret = process.env.JWT_SECRET ?? 'secret';
       jwt.verify(context.token, secret);
 
-      const DEFAULT_NUMBER_OF_USERS = 50;
+      const DEFAULT_NUMBER_OF_USERS = 10;
       if (list.numUsers === undefined) {
         list.numUsers = DEFAULT_NUMBER_OF_USERS;
       }
@@ -88,7 +88,7 @@ export const resolvers = {
       const userRepository = getRepository(User);
       const usersList = await userRepository.find({ order: { name: 'ASC' }, take: list.numUsers });
 
-      if (!usersList) {
+      if (usersList.length === 0) {
         throw new NotFoundError(errorMessage.userListEmpty);
       }
 

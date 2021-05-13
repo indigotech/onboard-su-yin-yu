@@ -6,7 +6,7 @@ import { User } from '../entity/User';
 import { errorMessage } from '../error';
 import { getDateFromISO, saveNewUser } from './utils';
 
-describe('GraphQL Query', () => {
+describe('GraphQL Query - User', () => {
   let requestServer: SuperTest<Test>;
   let userRepository: Repository<User>;
   let login: User;
@@ -50,16 +50,8 @@ describe('GraphQL Query', () => {
     }
   `;
 
-  it('should be possible to call hello query', async (): Promise<void> => {
-    const res: request.Response = await requestServer
-      .post('/graphql').
-      send({ query: '{ hello }' })
-      .expect(200);
-    expect(res.body.data.hello).to.equal('Hello world!');
-  });
-
   it('should return the user fetched by id', async (): Promise<void> => {
-    const res: request.Response = await requestServer
+    const res = await requestServer
       .post('/graphql')
       .set('authorization', token)
       .send({
@@ -67,8 +59,8 @@ describe('GraphQL Query', () => {
         variables: { data: userId },
       });
 
-    const findUser: User = res.body.data.user;
-    expect(findUser).to.be.deep.eq({
+    const resUser: User = res.body.data.user;
+    expect(resUser).to.be.deep.eq({
       id: String(userId),
       name: user.name,
       email: user.email,
@@ -80,7 +72,7 @@ describe('GraphQL Query', () => {
     const lastUserId: User = (await userRepository.findOne({ order: { id: 'DESC' } })) as any;
     userId = lastUserId ? lastUserId.id + 1 : 1;
 
-    const res: request.Response = await requestServer
+    const res = await requestServer
       .post('/graphql')
       .set('authorization', token)
       .send({
@@ -95,7 +87,7 @@ describe('GraphQL Query', () => {
   });
 
   it('should return an error for query user when token is missing', async (): Promise<void> => {
-    const res: request.Response = await requestServer
+    const res = await requestServer
       .post('/graphql')
       .send({
         query: queryUser,
@@ -111,7 +103,7 @@ describe('GraphQL Query', () => {
   it('should return an error for query user when token is invalid', async (): Promise<void> => {
     const invalidToken: string = jwt.sign({ id: login.id }, 'abc', { expiresIn: 3600 });
 
-    const res: request.Response = await requestServer
+    const res = await requestServer
       .post('/graphql')
       .set('authorization', invalidToken)
       .send({

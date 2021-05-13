@@ -6,7 +6,7 @@ import { User } from '../entity/User';
 import { errorMessage } from '../error';
 import { getDateFromISO, newUser, saveNewUser } from './utils';
 
-describe('GraphQL Mutation', () => {
+describe('GraphQL Mutation - Create User', () => {
   let requestServer: SuperTest<Test>;
   let userRepository: Repository<User>;
   let login: User;
@@ -46,9 +46,9 @@ describe('GraphQL Mutation', () => {
   `;
 
   it('should be possible to create user', async (): Promise<void> => {
-    const user: User = newUser('User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
+    const user = newUser('User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
 
-    const res: request.Response = await requestServer
+    const res = await requestServer
       .post('/graphql')
       .set('authorization', token)
       .send({
@@ -75,9 +75,9 @@ describe('GraphQL Mutation', () => {
 
   it('should return an error about repeated email', async (): Promise<void> => {
     await saveNewUser(userRepository, 'User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
-    const duplicatedUser: User = newUser('User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
+    const duplicatedUser = newUser('User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
 
-    const res: request.Response = await requestServer
+    const res = await requestServer
       .post('/graphql')
       .set('authorization', token)
       .send({
@@ -92,9 +92,9 @@ describe('GraphQL Mutation', () => {
   });
 
   it('should return an error about short password', async (): Promise<void> => {
-    const user: User = newUser('User Name', 'name@email.com', 'abcd', new Date(1990, 1, 1));
+    const user = newUser('User Name', 'name@email.com', 'abcd', new Date(1990, 1, 1));
 
-    const res: request.Response = await requestServer
+    const res = await requestServer
       .post('/graphql')
       .set('authorization', token)
       .send({
@@ -109,9 +109,9 @@ describe('GraphQL Mutation', () => {
   });
 
   it('should return an error about password pattern', async (): Promise<void> => {
-    const user: User = newUser('User Name', 'name@email.com', 'abcdefg', new Date(1990, 1, 1));
+    const user = newUser('User Name', 'name@email.com', 'abcdefg', new Date(1990, 1, 1));
 
-    const res: request.Response = await requestServer
+    const res = await requestServer
       .post('/graphql')
       .set('authorization', token)
       .send({
@@ -125,10 +125,10 @@ describe('GraphQL Mutation', () => {
     });
   });
 
-  it('should return an error for createUser when token is missing', async (): Promise<void> => {
-    const user: User = newUser('User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
+  it('should return an error for mutation create user when token is missing', async (): Promise<void> => {
+    const user = newUser('User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
 
-    const res: request.Response = await requestServer
+    const res = await requestServer
       .post('/graphql')
       .send({
         query: mutationCreateUser,
@@ -141,12 +141,12 @@ describe('GraphQL Mutation', () => {
     });
   });
 
-  it('should return an error for mutation when token is invalid', async (): Promise<void> => {
-    const user: User = newUser('User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
+  it('should return an error for mutation create user  when token is invalid', async (): Promise<void> => {
+    const user = newUser('User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
 
     const invalidToken: string = jwt.sign({ id: login.id }, 'abc', { expiresIn: 3600 });
 
-    const res: request.Response = await requestServer
+    const res = await requestServer
       .post('/graphql')
       .set('authorization', invalidToken)
       .send({
