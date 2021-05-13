@@ -31,7 +31,7 @@ export async function startServer(): Promise<ApolloServer> {
     entities: [User],
   });
 
-  const response = await server.listen(4000);
+  const response = await server.listen(process.env.SERVER_PORT);
   console.log(`Server ready at ${response.url}`);
 
   return server;

@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { getManager, getRepository } from 'typeorm';
 import { User } from './entity/User';
-import { AuthError, ConflictError, errorMessage, InputError } from './error';
+import { AuthError, ConflictError, errorMessage, InputError, NotFoundError } from './error';
 import {
   AuthPayload,
   checkPasswordLength,
@@ -16,6 +16,7 @@ import {
 export const typeDefs = gql`
   type Query {
     hello: String
+    user(id: ID!): User
   }
 
   type Mutation {
@@ -54,6 +55,20 @@ export const resolvers = {
     hello: (): string => {
       return 'Hello world!';
     },
+
+    user: async (_, userId: { id: number }, context: Context): Promise<User> => {
+      const secret = process.env.JWT_SECRET ?? 'secret';
+      jwt.verify(context.token, secret);
+
+      const userRepository = getRepository(User);
+      const findUser = await userRepository.findOne({ id: userId.id });
+
+      if (!findUser) {
+        throw new NotFoundError(errorMessage.userNotFound);
+      }
+
+      return findUser;
+    }
   },
 
   Mutation: {
