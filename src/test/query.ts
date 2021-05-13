@@ -1,10 +1,10 @@
-import bcrypt from 'bcrypt';
 import { expect } from 'chai';
 import jwt from 'jsonwebtoken';
 import request, { SuperTest, Test } from 'supertest';
 import { getRepository, Repository } from 'typeorm';
 import { User } from '../entity/User';
 import { errorMessage } from '../error';
+import { getDateFromISO, saveNewUser } from './utils';
 
 describe('GraphQL Query', () => {
   let requestServer: SuperTest<Test>;
@@ -28,13 +28,13 @@ describe('GraphQL Query', () => {
         'Authenticate Login',
         'login@email.com',
         'abcd1234',
-        '01-01-1990',
+        new Date(1990, 1, 1),
       );
 
       const secret: string = process.env.JWT_SECRET ?? 'secret';
       token = jwt.sign({ id: login.id }, secret, { expiresIn: 3600 });
 
-      user = await saveNewUser(userRepository, 'User Name', 'name@email.com', 'abcd1234', '01-01-1990');
+      user = await saveNewUser(userRepository, 'User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
       userId = user.id;
     },
   );
@@ -72,7 +72,7 @@ describe('GraphQL Query', () => {
       id: String(userId),
       name: user.name,
       email: user.email,
-      birthDate: user.birthDate,
+      birthDate: getDateFromISO(user.birthDate),
     });
   });
 
@@ -125,21 +125,3 @@ describe('GraphQL Query', () => {
     });
   });
 });
-
-async function saveNewUser(
-  repository: Repository<User>,
-  name: string,
-  email: string,
-  password: string,
-  birthDate: string,
-): Promise<User> {
-
-  const user: User = new User();
-  user.name = name;
-  user.email = email;
-  user.password = await bcrypt.hash(password, 10);
-  user.birthDate = birthDate;
-
-  await repository.save(user);
-  return user;
-}

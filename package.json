@@ -4,11 +4,12 @@
   "description": "Project's Name: Onboard Project Project's Description: Project created to perform onboarding tasks Environment and tools: Steps to run and debug:",
   "main": "index.js",
   "scripts": {
-    "docker": "docker-compose up -d",
-    "test": "TEST='OK' mocha --require ts-node/register src/test/index.ts",
-    "dev": "ts-node-dev src/apollo-server.ts",
     "build": "rm -rf ./build & tsc",
-    "start": "node build/apollo-server.js"
+    "dev": "ts-node-dev src/apollo-server.ts",
+    "docker": "docker-compose up -d",
+    "start": "node build/apollo-server.js",
+    "seed": "ts-node-dev src/run-seed.ts",
+    "test": "TEST='OK' mocha --require ts-node/register src/test/index.ts"
   },
   "repository": {
     "type": "git",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@types/bcrypt": "5.0.0",
+    "@types/faker": "5.5.5",
     "@types/jsonwebtoken": "8.5.1",
     "@types/mocha": "8.2.2",
     "@types/node": "15.0.1",
@@ -41,6 +43,7 @@
     "chai": "4.3.4",
     "eslint": "7.25.0",
     "eslint-config-prettier": "8.3.0",
+    "faker": "5.5.3",
     "mocha": "8.3.2",
     "prettier": "2.2.1",
     "supertest": "6.1.3",
