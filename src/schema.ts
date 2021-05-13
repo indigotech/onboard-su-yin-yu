@@ -11,12 +11,14 @@ import {
   Context,
   CreateUserMutation,
   LoginInput,
+  UserList,
 } from './user-input';
 
 export const typeDefs = gql`
   type Query {
     hello: String
     user(id: ID!): User
+    users(numUsers: Int): UserList
   }
 
   type Mutation {
@@ -44,6 +46,10 @@ export const typeDefs = gql`
     birthDate: String
   }
 
+  type UserList {
+    list: [User]
+  }
+
   type AuthPayload {
     user: User!
     token: String!
@@ -68,7 +74,26 @@ export const resolvers = {
       }
 
       return findUser;
-    }
+    },
+
+    users: async (_, list: { numUsers: number }, context: Context): Promise<UserList> => {
+      const secret = process.env.JWT_SECRET ?? 'secret';
+      jwt.verify(context.token, secret);
+
+      const DEFAULT_NUMBER_OF_USERS = 50;
+      if (list.numUsers === undefined) {
+        list.numUsers = DEFAULT_NUMBER_OF_USERS;
+      }
+
+      const userRepository = getRepository(User);
+      const usersList = await userRepository.find({ order: { name: 'ASC' }, take: list.numUsers });
+
+      if (!usersList) {
+        throw new NotFoundError(errorMessage.userListEmpty);
+      }
+
+      return { list: usersList };
+    },
   },
 
   Mutation: {
