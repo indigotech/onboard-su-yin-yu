@@ -14,10 +14,15 @@ export interface User {
 
 export interface UserList {
   list: User[];
+  users: number;
+  totalUsers: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
 }
 
-export interface CreateUserMutation {
-  data: UserInput;
+export interface UserQueryInput {
+  numUsers: number;
+  skip: number;
 }
 
 export interface LoginInput {
