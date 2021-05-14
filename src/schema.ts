@@ -81,16 +81,10 @@ export const resolvers = {
       jwt.verify(context.token, secret);
 
       const DEFAULT_NUMBER_OF_USERS = 10;
-      if (list.numUsers === undefined) {
-        list.numUsers = DEFAULT_NUMBER_OF_USERS;
-      }
+      const takeUsers = list.numUsers ?? DEFAULT_NUMBER_OF_USERS;
 
       const userRepository = getRepository(User);
-      const usersList = await userRepository.find({ order: { name: 'ASC' }, take: list.numUsers });
-
-      if (usersList.length === 0) {
-        throw new NotFoundError(errorMessage.userListEmpty);
-      }
+      const usersList = await userRepository.find({ order: { name: 'ASC' }, take: takeUsers });
 
       return { list: usersList };
     },
@@ -143,7 +137,8 @@ export const resolvers = {
       const token = jwt.sign(
         { id: dbUser.id },
         secret,
-        { expiresIn: login.data.rememberMe ? 7 * 24 * 3600 : 3600 });
+        { expiresIn: login.data.rememberMe ? 7 * 24 * 3600 : 3600 }
+      );
 
       return { user: dbUser, token };
     },

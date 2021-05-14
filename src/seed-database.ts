@@ -1,28 +1,8 @@
-import dotenv from 'dotenv';
 import faker from 'faker';
-import { createConnection, getRepository, Repository } from 'typeorm';
+import { getRepository, Repository } from 'typeorm';
 import { User } from './entity/User';
 
-export async function seedDatabase(numberOfUsers: number, connectDB?: boolean): Promise<void> {
-  dotenv.config({ path: './.env' });
-
-  if (connectDB) {
-    await createConnection({
-      type: 'postgres',
-      host: process.env.PS_HOST,
-      port: +(process.env.PS_PORT ?? 5432),
-      username: process.env.PS_USER,
-      password: process.env.PS_PASSWORD,
-      database: process.env.PS_DATABASE,
-      synchronize: true,
-      logging: false,
-      entities: [User],
-    });
-  }
-
-  const userRepository: Repository<User> = getRepository(User);
-  await userRepository.clear();
-
+export async function seedDatabase(numberOfUsers: number): Promise<void> {
   const fakeUsers: User[] = [];
   let i = 0;
 
@@ -37,5 +17,7 @@ export async function seedDatabase(numberOfUsers: number, connectDB?: boolean): 
     i++;
   } while (i < numberOfUsers);
 
+  const userRepository: Repository<User> = getRepository(User);
+  await userRepository.clear();
   await userRepository.save(fakeUsers);
 }

@@ -4,7 +4,7 @@ import request, { SuperTest, Test } from 'supertest';
 import { getRepository, Repository } from 'typeorm';
 import { User } from '../entity/User';
 import { errorMessage } from '../error';
-import { getDateFromISO, saveNewUser } from './utils';
+import { getDateFromISO } from './utils';
 
 describe('GraphQL Query - User', () => {
   let requestServer: SuperTest<Test>;
@@ -23,18 +23,22 @@ describe('GraphQL Query - User', () => {
     async (): Promise<void> => {
       await userRepository.clear();
 
-      login = await saveNewUser(
-        userRepository,
-        'Authenticate Login',
-        'login@email.com',
-        'abcd1234',
-        new Date(1990, 1, 1),
-      );
+      login = new User();
+      login.name = 'Authenticate Login';
+      login.email = 'login@email.com';
+      login.password = 'abcd1234';
+      login.birthDate = new Date(1990, 1, 1);
+      await userRepository.save(login);
 
       const secret: string = process.env.JWT_SECRET ?? 'secret';
       token = jwt.sign({ id: login.id }, secret, { expiresIn: 3600 });
 
-      user = await saveNewUser(userRepository, 'User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
+      user = new User();
+      user.name = 'User Name';
+      user.email = 'name@email.com';
+      user.password = 'abcd1234';
+      user.birthDate = new Date(1990, 1, 1);
+      await userRepository.save(user);
       userId = user.id;
     },
   );

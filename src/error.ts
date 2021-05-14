@@ -71,6 +71,5 @@ export const errorMessage = {
   email: 'Este e-mail já está cadastrado. Tente outro e-mail.',
   passwordPattern: 'A senha deve conter letras e números.',
   shortPassword: 'A senha deve ter pelo menos 7 caracteres.',
-  userListEmpty: 'Não foi possível encontrar usuários.',
   userNotFound: 'Usuário não encontrado.',
 };
