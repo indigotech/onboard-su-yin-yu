@@ -16,6 +16,7 @@ describe('Starting tests', () => {
   require('./mutation-create-user');
   require('./query-user');
   require('./query-users');
+  require('./relations-db');
 
   after(
     async (): Promise<void> => {
