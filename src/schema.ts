@@ -95,17 +95,15 @@ export const resolvers = {
       const skipUsers = list.data.skip ?? 0;
 
       const userRepository = getRepository(User);
-      const response = await userRepository.findAndCount({ order: { name: 'ASC' }, skip: skipUsers, take: takeUsers });
-      const usersList = response[0];
-      const totalUsers = response[1];
+      const [usersList, totalUsers] = await userRepository.findAndCount({
+        order: { name: 'ASC' },
+        skip: skipUsers,
+        take: takeUsers,
+      });
 
       const users = usersList.length;
-
-      let hasPreviousPage = true;
-      if (skipUsers === 0 || usersList.length === 0) {
-        hasPreviousPage = false;
-      }
-      const hasNextPage = skipUsers + takeUsers >= totalUsers ? false : true;
+      const hasPreviousPage = !(skipUsers === 0 || usersList.length === 0);
+      const hasNextPage = !(skipUsers + takeUsers >= totalUsers);
 
       return { list: usersList, users, totalUsers, hasPreviousPage, hasNextPage };
     },
