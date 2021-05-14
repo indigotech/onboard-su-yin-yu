@@ -10,6 +10,7 @@ export interface User {
   name: string;
   email: string;
   birthDate: Date;
+  adress?: Address[];
 }
 
 export interface UserList {
@@ -28,7 +29,7 @@ export interface UserQueryInput {
 export interface LoginInput {
   email: string;
   password: string;
-  rememberMe: boolean;
+  rememberMe?: boolean;
 }
 
 export interface AuthPayload {
@@ -38,6 +39,17 @@ export interface AuthPayload {
 
 export interface Context {
   token: string;
+}
+
+export interface Address {
+  id: number;
+  cep: number;
+  street: string;
+  streetNumber: number;
+  complement?: string;
+  neighborhood: string;
+  city: string;
+  state: string;
 }
 
 export function checkPasswordLength(password: string): boolean {

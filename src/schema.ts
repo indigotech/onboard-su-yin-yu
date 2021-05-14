@@ -50,6 +50,7 @@ export const typeDefs = gql`
     name: String!
     email: String!
     birthDate: String
+    address: [Address]
   }
 
   type UserList {
@@ -64,6 +65,18 @@ export const typeDefs = gql`
     user: User!
     token: String!
   }
+
+  type Address {
+    id: ID
+    cep: Int
+    street: String
+    streetNumber: Int
+    complement: String
+    neighborhood: String
+    city: String
+    state: String
+  }
+
 `;
 
 export const resolvers = {
@@ -77,13 +90,13 @@ export const resolvers = {
       jwt.verify(context.token, secret);
 
       const userRepository = getRepository(User);
-      const findUser = await userRepository.findOne({ id: userId.id });
+      const user = await userRepository.findOne({ relations: ['address'], where: { id: userId.id } });
 
-      if (!findUser) {
+      if (!user) {
         throw new NotFoundError(errorMessage.userNotFound);
       }
 
-      return findUser;
+      return user;
     },
 
     users: async (_, list: { data: UserQueryInput }, context: Context): Promise<UserList> => {
@@ -96,6 +109,7 @@ export const resolvers = {
 
       const userRepository = getRepository(User);
       const [usersList, totalUsers] = await userRepository.findAndCount({
+        relations: ['address'],
         order: { name: 'ASC' },
         skip: skipUsers,
         take: takeUsers,
@@ -103,7 +117,7 @@ export const resolvers = {
 
       const users = usersList.length;
       const hasPreviousPage = !(skipUsers === 0 || usersList.length === 0);
-      const hasNextPage = !(skipUsers + takeUsers >= totalUsers);
+      const hasNextPage = skipUsers + usersList.length < totalUsers;
 
       return { list: usersList, users, totalUsers, hasPreviousPage, hasNextPage };
     },
