@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import { createConnection } from 'typeorm';
+import { Address } from './entity/Address';
 import { User } from './entity/User';
 
 export async function connectDb(): Promise<void> {
@@ -15,6 +16,6 @@ export async function connectDb(): Promise<void> {
     database: process.env.PS_DATABASE,
     synchronize: true,
     logging: false,
-    entities: [User],
+    entities: [User, Address],
   });
 }

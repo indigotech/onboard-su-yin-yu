@@ -1,7 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Address } from './Address';
 
 @Entity()
-export class User extends BaseEntity {
+export class User {
   @PrimaryGeneratedColumn()
   id!: number;
 
@@ -16,4 +17,7 @@ export class User extends BaseEntity {
 
   @Column({ type: 'date' })
   birthDate!: Date;
+
+  @OneToMany(() => Address, (address: Address) => address.user, { cascade: true })
+  address!: Address[];
 }
