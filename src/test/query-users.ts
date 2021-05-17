@@ -1,11 +1,13 @@
-import { expect } from 'chai';
+import { expect, use } from 'chai';
+import chaiExclude from 'chai-exclude';
 import jwt from 'jsonwebtoken';
 import request, { SuperTest, Test } from 'supertest';
 import { getRepository, Repository } from 'typeorm';
 import { User } from '../entity/User';
 import { errorMessage } from '../error';
 import { seedDatabase } from '../seed-database';
-import { UserList } from '../user-input';
+
+use(chaiExclude);
 
 describe('GraphQL Query - Users', () => {
   let requestServer: SuperTest<Test>;
@@ -44,6 +46,16 @@ describe('GraphQL Query - Users', () => {
           name
           email
           birthDate
+          address {
+            id
+            cep
+            street
+            streetNumber
+            complement
+            neighborhood
+            city
+            state
+          }
         }
         users
         totalUsers
@@ -64,16 +76,19 @@ describe('GraphQL Query - Users', () => {
         variables: { data: { numUsers } },
       });
 
-    const resUsers: UserList = res.body.data.users.list;
-    const dbUsers = await userRepository.find({ order: { name: 'ASC' }, take: numUsers });
+    const resUsers: User[] = res.body.data.users.list;
+    const dbUsers = await userRepository.find({ relations: ['address'], order: { name: 'ASC' }, take: numUsers });
+
     for (let i = 0; i < numUsers; i++) {
-      expect(resUsers[i]).to.be.deep.equal({
-        id: String(dbUsers[i].id),
+      expect(resUsers[i]).excludingEvery('id').to.deep.equal({
         name: dbUsers[i].name,
         email: dbUsers[i].email,
         birthDate: dbUsers[i].birthDate,
+        address: dbUsers[i].address,
       });
+      expect(resUsers[i].id).to.deep.equal(String(dbUsers[i].id));
     }
+
     expect(res.body.data.users.users).to.be.equal(numUsers);
     expect(res.body.data.users.totalUsers).to.be.equal(SEED_USERS + 1);
     expect(res.body.data.users.hasPreviousPage).to.be.false;
@@ -91,16 +106,19 @@ describe('GraphQL Query - Users', () => {
         variables: { data: {} },
       });
 
-    const resUsers: UserList = res.body.data.users.list;
-    const dbUsers = await userRepository.find({ order: { name: 'ASC' }, take: DEFAULT_NUM_USERS });
+    const resUsers: User[] = res.body.data.users.list;
+    const dbUsers = await userRepository.find({ relations: ['address'], order: { name: 'ASC' }, take: DEFAULT_NUM_USERS });
+
     for (let i = 0; i < DEFAULT_NUM_USERS; i++) {
-      expect(resUsers[i]).to.be.deep.equal({
-        id: String(dbUsers[i].id),
+      expect(resUsers[i]).excludingEvery('id').to.be.deep.equal({
         name: dbUsers[i].name,
         email: dbUsers[i].email,
         birthDate: dbUsers[i].birthDate,
+        address: dbUsers[i].address,
       });
+      expect(resUsers[i].id).to.deep.equal(String(dbUsers[i].id));
     }
+
     expect(res.body.data.users.users).to.be.equal(DEFAULT_NUM_USERS);
     expect(res.body.data.users.totalUsers).to.be.equal(SEED_USERS + 1);
     expect(res.body.data.users.hasPreviousPage).to.be.false;
@@ -121,7 +139,7 @@ describe('GraphQL Query - Users', () => {
     expect(res.body.data.users.list).to.deep.equal([]);
   });
 
-  it('should return \'hasNextPage false\' at the end of the list', async (): Promise<void> => {
+  it("should return 'hasNextPage false' at the end of the list", async (): Promise<void> => {
     const numUsers = 10;
     const skip = 40;
 
@@ -130,19 +148,27 @@ describe('GraphQL Query - Users', () => {
       .set('authorization', token)
       .send({
         query: queryUsers,
-        variables: { data: { skip } }
+        variables: { data: { skip } },
       });
 
-    const resUsers: UserList = res.body.data.users.list;
-    const dbUsers = await userRepository.find({ order: { name: 'ASC' }, skip: skip, take: numUsers });
+    const resUsers: User[] = res.body.data.users.list;
+    const dbUsers = await userRepository.find({
+      relations: ['address'],
+      order: { name: 'ASC' },
+      skip: skip,
+      take: numUsers,
+    });
+
     for (let i = 0; i < numUsers; i++) {
-      expect(resUsers[i]).to.be.deep.equal({
-        id: String(dbUsers[i].id),
+      expect(resUsers[i]).excludingEvery('id').to.be.deep.equal({
         name: dbUsers[i].name,
         email: dbUsers[i].email,
         birthDate: dbUsers[i].birthDate,
+        address: dbUsers[i].address,
       });
+      expect(resUsers[i].id).to.deep.equal(String(dbUsers[i].id));
     }
+
     expect(res.body.data.users.users).to.be.equal(numUsers);
     expect(res.body.data.users.totalUsers).to.be.equal(SEED_USERS + 1);
     expect(res.body.data.users.hasPreviousPage).to.be.true;

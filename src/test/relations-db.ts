@@ -1,9 +1,13 @@
-import { expect } from 'chai';
+import { expect, use } from 'chai';
+import chaiExclude from 'chai-exclude';
 import faker from 'faker';
 import { getRepository, Repository } from 'typeorm';
 import { Address } from '../entity/Address';
 import { User } from '../entity/User';
+import { createAddress, seedDatabase } from '../seed-database';
 import { getDateFromISO } from './utils';
+
+use(chaiExclude);
 
 describe('Relations on DB', () => {
   let userRepository: Repository<User>;
@@ -18,31 +22,16 @@ describe('Relations on DB', () => {
     },
   );
 
-  it('should be possible to creat an user with 2 addresses', async (): Promise<void> => {
+  it('should be possible to creat a user with 2 addresses', async (): Promise<void> => {
     const user = new User();
     user.name = faker.name.findName();
     user.email = faker.internet.email();
     user.password = faker.internet.password();
     user.birthDate = faker.date.between('1950-01-01', '2000-01-01');
+
     user.address = [];
-
-    const address1 = new Address();
-    address1.cep = 12345678;
-    address1.street = 'Avenida Paulista';
-    address1.streetNumber = 1234;
-    address1.neighborhood = 'Bela Vista';
-    address1.city = 'São Paulo';
-    address1.state = 'São Paulo';
-
-    const address2 = new Address();
-    address2.cep = 23456789;
-    address2.street = 'Avenida da Liberdade';
-    address2.streetNumber = 500;
-    address2.neighborhood = 'Liberdade';
-    address2.city = 'São Paulo';
-    address2.state = 'São Paulo';
-
-    user.address = [address1, address2];
+    user.address.push(createAddress());
+    user.address.push(createAddress());
 
     const createdUser = await userRepository.manager.save(user);
 
@@ -51,7 +40,30 @@ describe('Relations on DB', () => {
       name: user.name,
       email: user.email,
       birthDate: getDateFromISO(user.birthDate),
-      address: [address1, address2],
+      address: user.address,
+    });
+  });
+
+  it('should be possible to fetch a user and add an address to him/her', async (): Promise<void> => {
+    const fakerUsers: User[] = await seedDatabase(1);
+    const user: User = fakerUsers[0];
+    await userRepository.save(user);
+
+    const dbUser = await userRepository.findOne({ relations: ['address'], where: { id: user.id } });
+    const newAddress: Address = createAddress();
+    user.address.push(newAddress);
+    if (dbUser) {
+      dbUser.address.push(newAddress);
+      await userRepository.save(dbUser);
+    }
+
+    const dbUserUpdated = await userRepository.findOne({ relations: ['address'], where: { id: user.id } });
+    expect(dbUserUpdated).excludingEvery('id').to.deep.equal({
+      name: user.name,
+      email: user.email,
+      password: user.password,
+      birthDate: getDateFromISO(user.birthDate),
+      address: user.address,
     });
   });
 });

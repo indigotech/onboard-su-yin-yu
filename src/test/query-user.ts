@@ -1,10 +1,14 @@
-import { expect } from 'chai';
+import { expect, use } from 'chai';
+import chaiExclude from 'chai-exclude';
 import jwt from 'jsonwebtoken';
 import request, { SuperTest, Test } from 'supertest';
 import { getRepository, Repository } from 'typeorm';
 import { User } from '../entity/User';
 import { errorMessage } from '../error';
+import { seedDatabase } from '../seed-database';
 import { getDateFromISO } from './utils';
+
+use(chaiExclude);
 
 describe('GraphQL Query - User', () => {
   let requestServer: SuperTest<Test>;
@@ -33,12 +37,8 @@ describe('GraphQL Query - User', () => {
       const secret: string = process.env.JWT_SECRET ?? 'secret';
       token = jwt.sign({ id: login.id }, secret, { expiresIn: 3600 });
 
-      user = new User();
-      user.name = 'User Name';
-      user.email = 'name@email.com';
-      user.password = 'abcd1234';
-      user.birthDate = new Date(1990, 1, 1);
-      await userRepository.save(user);
+      const fakerUsers: User[] = await seedDatabase(1);
+      user = fakerUsers[0];
       userId = user.id;
     },
   );
@@ -50,6 +50,16 @@ describe('GraphQL Query - User', () => {
         name
         email
         birthDate
+        address {
+          id
+          cep
+          street
+          streetNumber
+          complement
+          neighborhood
+          city
+          state
+        }
       }
     }
   `;
@@ -64,16 +74,17 @@ describe('GraphQL Query - User', () => {
       });
 
     const resUser: User = res.body.data.user;
-    expect(resUser).to.be.deep.eq({
-      id: String(userId),
+    expect(resUser).excludingEvery('id').to.deep.equal({
       name: user.name,
       email: user.email,
       birthDate: getDateFromISO(user.birthDate),
+      address: user.address,
     });
+    expect(resUser.id).to.deep.equal(String(userId));
   });
 
   it('should return an error about user not found', async (): Promise<void> => {
-    const lastUserId: User = (await userRepository.findOne({ order: { id: 'DESC' } })) as any;
+    const lastUserId: User = await userRepository.findOne({ relations: ['address'], order: { id: 'DESC' } }) as any;
     userId = lastUserId ? lastUserId.id + 1 : 1;
 
     const res = await requestServer
