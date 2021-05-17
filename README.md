@@ -24,16 +24,21 @@ To start, clone this repository and run the command bellow in the terminal to in
 npm install
 ```
 
-To initialize the database, use the command:
-
-```sh
-docker-compose up -d
-```
-
 ## Steps to run and debug
 
-After configuring everything, you can run the project with the `start` script using the command:
+- **Database**
 
-```sh
-npm run start
-```
+  1. To initialize the database, use the command: `npm run docker`
+  2. To seed the database, use: `npm run seed`
+
+- **Start**
+
+  1. Build the project by running the command: `npm run build`
+  2. Run the **start** script: `npm run start`
+
+- **Debug**
+
+  - To debug the project, you can run the command: `npm run dev`
+
+- **Test**
+  - Run automated tests with: `npm run test`
