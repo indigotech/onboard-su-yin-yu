@@ -21,6 +21,7 @@ describe('GraphQL Query - Users', () => {
 
   beforeEach(
     async (): Promise<void> => {
+      await userRepository.delete({});
       await seedDatabase(SEED_USERS);
 
       login = new User();
@@ -107,7 +108,7 @@ describe('GraphQL Query - Users', () => {
   });
 
   it('should return an empty user array when database is empty', async (): Promise<void> => {
-    await userRepository.clear();
+    await userRepository.delete({});
 
     const res = await requestServer
       .post('/graphql')

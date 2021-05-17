@@ -18,6 +18,5 @@ export async function seedDatabase(numberOfUsers: number): Promise<void> {
   } while (i < numberOfUsers);
 
   const userRepository: Repository<User> = getRepository(User);
-  await userRepository.clear();
   await userRepository.save(fakeUsers);
 }

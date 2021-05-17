@@ -20,7 +20,7 @@ describe('GraphQL Mutation - Create User', () => {
 
   beforeEach(
     async (): Promise<void> => {
-      await userRepository.clear();
+      await userRepository.delete({});
 
       login = new User();
       login.name = 'Authenticate Login';
