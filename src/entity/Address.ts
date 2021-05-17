@@ -9,7 +9,7 @@ export class Address {
   @Column()
   cep!: number;
 
-  @Column({ unique: true })
+  @Column()
   street!: string;
 
   @Column()
