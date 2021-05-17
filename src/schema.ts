@@ -9,16 +9,17 @@ import {
   checkPasswordLength,
   checkPasswordPattern,
   Context,
-  CreateUserMutation,
   LoginInput,
+  UserInput,
   UserList,
+  UserQueryInput,
 } from './user-input';
 
 export const typeDefs = gql`
   type Query {
     hello: String
     user(id: ID!): User
-    users(numUsers: Int): UserList
+    users(data: UserQueryInput): UserList
   }
 
   type Mutation {
@@ -39,6 +40,11 @@ export const typeDefs = gql`
     rememberMe: Boolean
   }
 
+  input UserQueryInput {
+    numUsers: Int
+    skip: Int
+  }
+
   type User {
     id: ID!
     name: String!
@@ -48,6 +54,10 @@ export const typeDefs = gql`
 
   type UserList {
     list: [User]
+    users: Int
+    totalUsers: Int
+    hasPreviousPage: Boolean
+    hasNextPage: Boolean
   }
 
   type AuthPayload {
@@ -76,22 +86,31 @@ export const resolvers = {
       return findUser;
     },
 
-    users: async (_, list: { numUsers: number }, context: Context): Promise<UserList> => {
+    users: async (_, list: { data: UserQueryInput }, context: Context): Promise<UserList> => {
       const secret = process.env.JWT_SECRET ?? 'secret';
       jwt.verify(context.token, secret);
 
       const DEFAULT_NUMBER_OF_USERS = 10;
-      const takeUsers = list.numUsers ?? DEFAULT_NUMBER_OF_USERS;
+      const takeUsers = list.data.numUsers ?? DEFAULT_NUMBER_OF_USERS;
+      const skipUsers = list.data.skip ?? 0;
 
       const userRepository = getRepository(User);
-      const usersList = await userRepository.find({ order: { name: 'ASC' }, take: takeUsers });
+      const [usersList, totalUsers] = await userRepository.findAndCount({
+        order: { name: 'ASC' },
+        skip: skipUsers,
+        take: takeUsers,
+      });
 
-      return { list: usersList };
+      const users = usersList.length;
+      const hasPreviousPage = !(skipUsers === 0 || usersList.length === 0);
+      const hasNextPage = !(skipUsers + takeUsers >= totalUsers);
+
+      return { list: usersList, users, totalUsers, hasPreviousPage, hasNextPage };
     },
   },
 
   Mutation: {
-    createUser: async (_, userData: CreateUserMutation, context: Context): Promise<User> => {
+    createUser: async (_, userData: { data: UserInput }, context: Context): Promise<User> => {
       const secret = process.env.JWT_SECRET ?? 'secret';
       jwt.verify(context.token, secret);
 
