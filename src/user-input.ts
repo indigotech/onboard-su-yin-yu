@@ -12,6 +12,10 @@ export interface User {
   birthDate: Date;
 }
 
+export interface UserList {
+  list: User[];
+}
+
 export interface CreateUserMutation {
   data: UserInput;
 }

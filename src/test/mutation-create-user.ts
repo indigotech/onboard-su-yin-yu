@@ -4,11 +4,12 @@ import request, { SuperTest, Test } from 'supertest';
 import { getRepository, Repository } from 'typeorm';
 import { User } from '../entity/User';
 import { errorMessage } from '../error';
-import { getDateFromISO, newUser, saveNewUser } from './utils';
+import { getDateFromISO } from './utils';
 
-describe('GraphQL Mutation', () => {
+describe('GraphQL Mutation - Create User', () => {
   let requestServer: SuperTest<Test>;
   let userRepository: Repository<User>;
+  let user: User;
   let login: User;
   let token: string;
 
@@ -21,16 +22,21 @@ describe('GraphQL Mutation', () => {
     async (): Promise<void> => {
       await userRepository.clear();
 
-      login = await saveNewUser(
-        userRepository,
-        'Authenticate Login',
-        'login@email.com',
-        'abcd1234',
-        new Date(1990, 1, 1),
-      );
+      login = new User();
+      login.name = 'Authenticate Login';
+      login.email = 'login@email.com';
+      login.password = 'abcd1234';
+      login.birthDate = new Date(1990, 1, 1);
+      await userRepository.save(login);
 
       const secret: string = process.env.JWT_SECRET ?? 'secret';
       token = jwt.sign({ id: login.id }, secret, { expiresIn: 3600 });
+
+      user = new User();
+      user.name = 'User Name';
+      user.email = 'name@email.com';
+      user.password = 'abcd1234';
+      user.birthDate = new Date(1990, 1, 1);
     },
   );
 
@@ -46,9 +52,7 @@ describe('GraphQL Mutation', () => {
   `;
 
   it('should be possible to create user', async (): Promise<void> => {
-    const user: User = newUser('User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
-
-    const res: request.Response = await requestServer
+    const res = await requestServer
       .post('/graphql')
       .set('authorization', token)
       .send({
@@ -74,10 +78,15 @@ describe('GraphQL Mutation', () => {
   });
 
   it('should return an error about repeated email', async (): Promise<void> => {
-    await saveNewUser(userRepository, 'User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
-    const duplicatedUser: User = newUser('User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
+    await userRepository.save(user);
 
-    const res: request.Response = await requestServer
+    const duplicatedUser = new User();
+    duplicatedUser.name = 'User Name';
+    duplicatedUser.email = 'name@email.com';
+    duplicatedUser.password = 'abcd1234';
+    duplicatedUser.birthDate = new Date(1990, 1, 1);
+
+    const res = await requestServer
       .post('/graphql')
       .set('authorization', token)
       .send({
@@ -92,9 +101,9 @@ describe('GraphQL Mutation', () => {
   });
 
   it('should return an error about short password', async (): Promise<void> => {
-    const user: User = newUser('User Name', 'name@email.com', 'abcd', new Date(1990, 1, 1));
+    user.password = 'abcd';
 
-    const res: request.Response = await requestServer
+    const res = await requestServer
       .post('/graphql')
       .set('authorization', token)
       .send({
@@ -109,9 +118,9 @@ describe('GraphQL Mutation', () => {
   });
 
   it('should return an error about password pattern', async (): Promise<void> => {
-    const user: User = newUser('User Name', 'name@email.com', 'abcdefg', new Date(1990, 1, 1));
+    user.password = 'abcdefg';
 
-    const res: request.Response = await requestServer
+    const res = await requestServer
       .post('/graphql')
       .set('authorization', token)
       .send({
@@ -125,10 +134,8 @@ describe('GraphQL Mutation', () => {
     });
   });
 
-  it('should return an error for createUser when token is missing', async (): Promise<void> => {
-    const user: User = newUser('User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
-
-    const res: request.Response = await requestServer
+  it('should return an error for mutation create user when token is missing', async (): Promise<void> => {
+    const res = await requestServer
       .post('/graphql')
       .send({
         query: mutationCreateUser,
@@ -141,12 +148,10 @@ describe('GraphQL Mutation', () => {
     });
   });
 
-  it('should return an error for mutation when token is invalid', async (): Promise<void> => {
-    const user: User = newUser('User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
-
+  it('should return an error for mutation create user  when token is invalid', async (): Promise<void> => {
     const invalidToken: string = jwt.sign({ id: login.id }, 'abc', { expiresIn: 3600 });
 
-    const res: request.Response = await requestServer
+    const res = await requestServer
       .post('/graphql')
       .set('authorization', invalidToken)
       .send({

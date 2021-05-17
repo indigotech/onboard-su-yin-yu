@@ -4,9 +4,9 @@ import request, { SuperTest, Test } from 'supertest';
 import { getRepository, Repository } from 'typeorm';
 import { User } from '../entity/User';
 import { errorMessage } from '../error';
-import { getDateFromISO, saveNewUser } from './utils';
+import { getDateFromISO } from './utils';
 
-describe('GraphQL Query', () => {
+describe('GraphQL Query - User', () => {
   let requestServer: SuperTest<Test>;
   let userRepository: Repository<User>;
   let login: User;
@@ -23,18 +23,22 @@ describe('GraphQL Query', () => {
     async (): Promise<void> => {
       await userRepository.clear();
 
-      login = await saveNewUser(
-        userRepository,
-        'Authenticate Login',
-        'login@email.com',
-        'abcd1234',
-        new Date(1990, 1, 1),
-      );
+      login = new User();
+      login.name = 'Authenticate Login';
+      login.email = 'login@email.com';
+      login.password = 'abcd1234';
+      login.birthDate = new Date(1990, 1, 1);
+      await userRepository.save(login);
 
       const secret: string = process.env.JWT_SECRET ?? 'secret';
       token = jwt.sign({ id: login.id }, secret, { expiresIn: 3600 });
 
-      user = await saveNewUser(userRepository, 'User Name', 'name@email.com', 'abcd1234', new Date(1990, 1, 1));
+      user = new User();
+      user.name = 'User Name';
+      user.email = 'name@email.com';
+      user.password = 'abcd1234';
+      user.birthDate = new Date(1990, 1, 1);
+      await userRepository.save(user);
       userId = user.id;
     },
   );
@@ -50,16 +54,8 @@ describe('GraphQL Query', () => {
     }
   `;
 
-  it('should be possible to call hello query', async (): Promise<void> => {
-    const res: request.Response = await requestServer
-      .post('/graphql').
-      send({ query: '{ hello }' })
-      .expect(200);
-    expect(res.body.data.hello).to.equal('Hello world!');
-  });
-
   it('should return the user fetched by id', async (): Promise<void> => {
-    const res: request.Response = await requestServer
+    const res = await requestServer
       .post('/graphql')
       .set('authorization', token)
       .send({
@@ -67,8 +63,8 @@ describe('GraphQL Query', () => {
         variables: { data: userId },
       });
 
-    const findUser: User = res.body.data.user;
-    expect(findUser).to.be.deep.eq({
+    const resUser: User = res.body.data.user;
+    expect(resUser).to.be.deep.eq({
       id: String(userId),
       name: user.name,
       email: user.email,
@@ -80,7 +76,7 @@ describe('GraphQL Query', () => {
     const lastUserId: User = (await userRepository.findOne({ order: { id: 'DESC' } })) as any;
     userId = lastUserId ? lastUserId.id + 1 : 1;
 
-    const res: request.Response = await requestServer
+    const res = await requestServer
       .post('/graphql')
       .set('authorization', token)
       .send({
@@ -95,7 +91,7 @@ describe('GraphQL Query', () => {
   });
 
   it('should return an error for query user when token is missing', async (): Promise<void> => {
-    const res: request.Response = await requestServer
+    const res = await requestServer
       .post('/graphql')
       .send({
         query: queryUser,
@@ -111,7 +107,7 @@ describe('GraphQL Query', () => {
   it('should return an error for query user when token is invalid', async (): Promise<void> => {
     const invalidToken: string = jwt.sign({ id: login.id }, 'abc', { expiresIn: 3600 });
 
-    const res: request.Response = await requestServer
+    const res = await requestServer
       .post('/graphql')
       .set('authorization', invalidToken)
       .send({

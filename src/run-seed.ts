@@ -1,3 +1,9 @@
+import { connectDb } from './connect-db';
 import { seedDatabase } from './seed-database';
 
-seedDatabase(100);
+async function seed(): Promise<void> {
+  await connectDb();
+  seedDatabase(50);
+}
+
+seed();
